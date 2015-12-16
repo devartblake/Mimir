@@ -14,6 +14,11 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 
+# Visual Studio project files
+*.sln
+*.njsproj
+*.suo
+
 # Windows shortcuts
 *.lnk
 
@@ -41,3 +46,4 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+node_modules

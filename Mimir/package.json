@@ -1,0 +1,25 @@
+{
+  "name": "Mimir",
+  "version": "0.0.0",
+  "description": "Mimir",
+  "main": "server.js",
+  "author": {
+    "name": "scorp",
+    "email": ""
+  },
+  "dependencies": {
+    "async": "^1.5.0",
+    "cheerio": "^0.19.0",
+    "cookiejar": "^2.0.6",
+    "jsdom": "^7.2.1",
+    "lodash": "^3.10.1",
+    "mongoose": "^4.3.1",
+    "redis": "^2.4.2",
+    "request": "^2.67.0",
+    "routes": "^2.1.0",
+    "underscore": "^1.8.3",
+    "urijs": "^1.17.0",
+    "w3c-validator": "^3.0.1",
+    "winston": "^2.1.1"
+  }
+}
