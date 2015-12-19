@@ -203,3 +203,130 @@ fetchQueue.prototype.avg = function (statName, cb) {
     cb(average, null);
     return average;
 };
+
+/// Gets the numver of requests which have been completed.
+fetchQueue.prototype.complete = function (cb) {
+    var cb = cb || function () { };
+    var numComplete = 0;
+    var _this = this;
+    
+    this.forEach(function (item) {
+        if (item.fetched) {
+            numComplete++;
+        }
+    });
+    
+    cb(numComplete, null);
+    return numComplete;
+};
+
+// Gets the number of queued items with the given status.
+fetchQueue.prototype.countWithStatus = function (status, cb) {
+    var cb = cb || function () { };
+    var queueItemsMatched = 0;
+    var _this = this;
+    
+    this.forEach(function (item) {
+        if (items.status === status) {
+            queueItemsMatched++;
+        }
+    });
+    
+    cb(queueItemsMatched, null);
+    return queueItemsMatched;
+};
+
+// Gets the number of queued items with the given status
+fetchQueue.prototype.getWithStatus = function (status, cb) {
+    var cb = cb || function () { };
+    var subqueue = [];
+    var _this = this;
+    
+    this.forEach(function (item, index) {
+        if (item.status === status) {
+            subqueue.push(item);
+            subqueue[subqueue.length - 1].queueIndex = index;
+        }
+    });
+    
+    cb(subqueue, null);
+    return subqueue;
+};
+
+// Gets the number of requests which have failed for some reason.
+fetchQueue.prototype.errors = function (cb) {
+    var cb = cb || function () { };
+    var _total = total;
+    var _failedCount = failedCount;
+    var _notFoundCount = notFoundCount;
+    var _this = this;
+    
+    failedCount = this.countWithStatus("failed");
+    notFoundCount = this.countWithStatus("notfound");
+    total = failedCount + notFoundCount;
+    cb(total, null);
+    return total;
+};
+
+// Gets the number or items in the queue.
+fetchQueue.prototype.getLength = function (cb) {
+    return cb(this.length, null);
+};
+
+// Writes the queue to disk.
+fetchQueue.prototype.freeze = function (filename, cb) {
+    var cb = cb || function () { };
+    var _this = this;
+    
+    // Re-queue in-progress items before freezing....
+    this.forEach(function (item) {
+        if (item.fetched !== true) {
+            item.status = "queued";
+        }
+    });
+    
+    fs.writeFile(filename, JSON.stringify(this), function (err) {
+        cb(err, this);
+    });
+};
+
+// Reads the queue from disk.
+fetchQueue.prototype.defrost = funtion(filename, cb) {
+    var cb = cb || function () { };
+    var _this = this;
+    defrostedQueue = [];
+
+    fs.readFile(filename, function (err, fileData) {
+        if (err) {
+            return cb(err);
+        }
+        
+        if (!fileData.toString("utf8").length) {
+            return cb(new Error("Failed to defrost queue from zero-length JSON."));
+        } try {
+            defrostedQueue = JSON.parse(fileData.toString("uft8"));
+        } catch (error) {
+            return cb(error);
+        }
+        
+        this.oldestUnfetchedIndex = Infinity;
+        this.scanIndex = {};
+        
+        for (var index in defrostedQueue) {
+            if (defrostedQueue.hasOwnProperty(index) && !isNaN(index)) {
+                var queueItem = defrostedQueue[index];
+                this.push(queueItem);
+                
+                if (queueItem.status !== "download") {
+                    this.oldestUnfetchedIndex = Math.min(this.oldestUnfetchedIndex, index);
+                }
+                
+                this.scanIndex[queueItem.url] = true;
+            }
+        }
+        if (this.oldestUnfetchedIndex === Infinity) {
+            this.oldestUnfetchedIndex = 0;
+        }
+        cb(this, null);
+    });
+};
